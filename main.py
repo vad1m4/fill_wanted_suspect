@@ -1,50 +1,29 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 from no_ui_main import *
 import datetime
+import json
 
 today = datetime.date.today()
 current_year = today.year + 1
 
 
 # defining
-# removes temp text in the time entry
-def c_temp_time(e):
-    if time_entry.get() == "HH:MM":
-        time_entry.delete(0, END)
-
-
-# adds temp text in the time entry
-def a_temp_time(e):
-    print(len(time_entry.get()))
-    if time_entry.get() == "":
-        time_entry.insert(0, "HH:MM")
-    elif len(time_entry.get()) < 5:
-        time_entry.delete(0, END)
-        time_entry.insert(0, "HH:MM")
-
-
-# removes temp text in the date entry
-def c_temp_date(e):
-    if date_entry.get() == "DD/MM/YYYY":
-        date_entry.delete(0, END)
-
-
-# adds temp text in the date entry
-def a_temp_date(e):
-    print(len(date_entry.get()))
-    if date_entry.get() == "":
-        date_entry.insert(0, "DD/MM/YYYY")
-    elif len(date_entry.get()) < 10:
-        date_entry.delete(0, END)
-        date_entry.insert(0, "DD/MM/YYYY")
-
-
 # controls rd entry, makes it so you can't input text and write more than 4 digits
 def validate_rd(P):
     if len(P) == 0:
         return True
     elif len(P) < 5 and P.isdigit():
+        return True
+    else:
+        return False
+
+
+def validate_age(P):
+    if len(P) == 0:
+        return True
+    elif len(P) < 3 and P.isdigit():
         return True
     else:
         return False
@@ -123,16 +102,79 @@ def validate_tm(P):
 
 # --- MAIN --- #
 def main():
-    global time_entry
-    global date_entry
+    # inner functions
+    # removes temp text in the time entry
+    def c_temp_time(e):
+        if time_entry.get() == "HH:MM":
+            time_entry.delete(0, END)
+
+    # adds temp text in the time entry
+    def a_temp_time(e):
+        print(len(time_entry.get()))
+        if time_entry.get() == "":
+            time_entry.insert(0, "HH:MM")
+        elif len(time_entry.get()) < 5:
+            time_entry.delete(0, END)
+            time_entry.insert(0, "HH:MM")
+
+    # removes temp text in the date entry
+    def c_temp_date(e):
+        if date_entry.get() == "DD/MM/YYYY":
+            date_entry.delete(0, END)
+
+    # adds temp text in the date entry
+    def a_temp_date(e):
+        print(len(date_entry.get()))
+        if date_entry.get() == "":
+            date_entry.insert(0, "DD/MM/YYYY")
+        elif len(date_entry.get()) < 10:
+            date_entry.delete(0, END)
+            date_entry.insert(0, "DD/MM/YYYY")
+
+    # takes all the stuff from the entries/comboboxes and generates the template
+    def submit():
+        to_fill_in["DIVISION"] = selected_div.get()
+        to_fill_in["DR"] = dr
+        to_fill_in["FULL_NAME"] = fn_entry.get()
+        to_fill_in["SEX"] = selected_sex.get()
+        to_fill_in["AGE"] = age_entry.get()
+        to_fill_in["LOCATION"] = lc_entry.get()
+        to_fill_in["RD"] = rd_entry.get()
+        to_fill_in["ETHNICITY"] = eth_entry.get()
+        to_fill_in["HAIR"] = hair_entry.get()
+        to_fill_in["TIME"] = time_entry.get()
+        to_fill_in["DATE"] = date_entry.get()
+        to_fill_in["OFFENSE"] = of_entry.get().upper()
+        to_fill_in["WEAPONS"] = wp_entry.get()
+        to_fill_in["DESCRIPTION"] = dsc_text.get("1.0", END)
+        to_fill_in["DIVISION_CAPS"] = to_fill_in["DIVISION"].upper()
+        # print(json.dumps(to_fill_in, sort_keys=True, indent=4))
+        passed = False
+        for k in to_fill_in:
+            if to_fill_in[k] == "" or to_fill_in[k] == "\n" or to_fill_in[k] == "null" or to_fill_in[k] == "HH:MM" or to_fill_in[k] == "DD/MM/YYYY":
+                messagebox.showerror("Incorrect input", f"Please fill in the {k} field.")
+                passed = False
+                break
+            else:
+                passed = True
+        if passed:
+            full_name = to_fill_in["FULL_NAME"]
+            full_name_mugshot = full_name.lower().replace(" ", "_")
+            mugshot = save_file()
+            if not mugshot:
+                messagebox.showwarning("No mugshot", f"Mugshot {full_name_mugshot}.png/jpg/jpeg was not found in mugshot/.")
+            messagebox.showinfo("Complete", f"Wanted poster for {full_name} is complete.")
+            
+
     # root
     root = Tk()
-    root.title("Wanted suspect poster filler")
+    root.title("WANTED!")
     root.resizable(False, False)
-    root.minsize(250, 500)
+    root.minsize(250, 450)
 
     # icon
-    # --- this space is reserved for the icon --- #
+    icon = PhotoImage(file="icon.png")
+    root.iconphoto(True, icon)
 
     # frame
     main_frame = Frame(root)
@@ -147,8 +189,8 @@ def main():
         "Valley",
         "West",
     ]
-    div_label = Label(r0_frame, text="Division:", padx=7, pady=7)
-    div_label.grid(row=0, column=0)
+    div_label = Label(r0_frame, text="Division:", pady=7)
+    div_label.grid(row=0, column=0, padx=(0, 7))
     div_dropdown = ttk.Combobox(
         r0_frame, values=divisions, width=7, textvariable=selected_div
     )
@@ -166,7 +208,7 @@ def main():
     # --- ROW 1 -- #
     r1_frame = Frame(main_frame)
     # full name (label + entry)
-    fn_label = Label(r1_frame, text="Full name: ", padx=7)
+    fn_label = Label(r1_frame, text="Full name:  ")
     fn_label.grid(row=0, column=0)
     fn_entry = Entry(r1_frame)
     fn_entry.config(width=27)
@@ -190,8 +232,10 @@ def main():
 
     # age (label + entry)
     temp_frame2 = Frame(r2_frame, width=50).grid(row=0, column=2)
-    age_label = Label(r2_frame, text="Age: ").grid(row=0, column=3)
-    age_entry = Entry(r2_frame, width=6).grid(row=0, column=4)
+    age_label = Label(r2_frame, text="Age:").grid(row=0, column=3, padx=(5, 0))
+    vcmd_age = (root.register(validate_age), "%P")
+    age_entry = Entry(r2_frame, width=4, validate="key", validatecommand=vcmd_age)
+    age_entry.grid(row=0, column=4, padx=7)
     # --- ROW 2 END --- #
     r2_frame.grid(row=2, column=0)
 
@@ -199,14 +243,14 @@ def main():
     r3_frame = Frame(main_frame)
     # location (label + entry)
     lc_label = Label(r3_frame, text="Location: ").grid(row=0, column=0)
-    lc_entry = Entry(r3_frame, width=18).grid(row=0, column=1)
+    lc_entry = Entry(r3_frame, width=18)
+    lc_entry.grid(row=0, column=1)
 
     # rd (label + entry)
     rd_label = Label(r3_frame, text="RD#: ").grid(row=0, column=2)
     vcmd_rd = (root.register(validate_rd), "%P")
-    rd_entry = Entry(r3_frame, width=4, validate="key", validatecommand=vcmd_rd).grid(
-        row=0, column=3
-    )
+    rd_entry = Entry(r3_frame, width=4, validate="key", validatecommand=vcmd_rd)
+    rd_entry.grid(row=0, column=3)
     # --- ROW 3 END --- #
     r3_frame.grid(row=3, column=0)
 
@@ -214,11 +258,13 @@ def main():
     r4_frame = Frame(main_frame)
     # ethnicity (label + entry)
     eth_label = Label(r4_frame, text="Ethnicity: ").grid(row=0, column=0)
-    eth_entry = Entry(r4_frame, width=11).grid(row=0, column=1)
+    eth_entry = Entry(r4_frame, width=11)
+    eth_entry.grid(row=0, column=1)
 
     # hair (label + entry)
     hair_label = Label(r4_frame, text="Hair: ").grid(row=0, column=2)
-    hair_entry = Entry(r4_frame, width=11).grid(row=0, column=3, pady=7)
+    hair_entry = Entry(r4_frame, width=11)
+    hair_entry.grid(row=0, column=3, pady=7)
     # --- ROW 4 END --- #
     r4_frame.grid(row=4, column=0)
 
@@ -232,7 +278,7 @@ def main():
     time_entry.insert(0, "HH:MM")
     time_entry.bind("<FocusIn>", c_temp_time)
     time_entry.bind("<FocusOut>", a_temp_time)
-    time_entry.grid(row=0, column=1, pady=7)
+    time_entry.grid(row=0, column=1)
     # date (label + entry)
     date_label = Label(r5_frame, text="Date: ").grid(row=0, column=3)
     vcmd_dt = (root.register(validate_dt), "%P")
@@ -240,9 +286,40 @@ def main():
     date_entry.insert(0, "DD/MM/YYYY")
     date_entry.bind("<FocusIn>", c_temp_date)
     date_entry.bind("<FocusOut>", a_temp_date)
-    date_entry.grid(row=0, column=4, pady=7)
+    date_entry.grid(row=0, column=4)
     # --- ROW 5 END --- #
     r5_frame.grid(row=5, column=0)
+
+    # --- ROW 6 --- #
+    r6_frame = Frame(main_frame)
+    # offense (label + entry)
+    of_label = Label(r6_frame, text="Offense: ").grid(row=0, column=0)
+    of_entry = Entry(r6_frame, width=29)
+    of_entry.grid(row=0, column=1, pady=(7,0))
+    # --- ROW 6 END --- #
+    r6_frame.grid(row=6, column=0)
+
+    # --- ROW 7 --- #
+    r7_frame = Frame(main_frame)
+    # weapons (label + entry)
+    wp_label = Label(r7_frame, text="Weapon(s): ").grid(row=0, column=0, pady=(0,7))
+    wp_entry = Entry(r7_frame, width=26)
+    wp_entry.grid(row=0, column=1)
+    # --- ROW 7 END --- #
+    r7_frame.grid(row=7, column=0)
+
+    # --- ROW 8 --- #
+    r8_frame = Frame(main_frame)
+    # description (label + text + button)
+    dsc_label = Label(r8_frame, text="Description: ").pack(side=TOP, anchor=NW)
+    dsc_text = Text(r8_frame, width=38, height=12, wrap=WORD)
+    dsc_text.config(font="Calibri 9")
+    dsc_text.pack(side=TOP)
+    dsc_button = Button(r8_frame, text="Generate!", command=submit).pack(
+        side=TOP, pady=7
+    )
+    # --- ROW 8 END --- #
+    r8_frame.grid(row=8, column=0)
 
     # frame end
     main_frame.grid(row=0, column=0)

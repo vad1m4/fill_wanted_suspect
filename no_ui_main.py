@@ -56,19 +56,19 @@ detective2_num = detective_num[1]
 
 to_fill_in = {
     "DIVISION": None,
-    "OFFENSE": None,
-    "DESCRIPTION": None,
-    "DATE": None,
-    "TIME": None,
-    "LOCATION": None,
-    "RD": None,
     "DR": None,
     "FULL_NAME": None,
     "SEX": None,
+    "AGE": None,
+    "LOCATION": None,
+    "RD": None,
     "ETHNICITY": None,
     "HAIR": None,
-    "AGE": None,
+    "TIME": None,
+    "DATE": None,
+    "OFFENSE": None,
     "WEAPONS": None,
+    "DESCRIPTION": None,
     "detective1_1": detective1_1,
     "detective2_1": detective2_1,
     "detective1_2": detective1_2,
@@ -78,25 +78,43 @@ to_fill_in = {
     "detective1_badge": detective1_badge,
     "detective2_badge": detective2_badge,
 }
+
+
 def create_dr():
     dr1 = random.randint(10, 20)
     dr2 = random.randint(10, 20)
     dr3 = random.randint(1000, 9999)
     dr = f"{dr1}-{dr2}-0{dr3}"
     return dr
+
+
 def save_file():
     try:
         pic_name = to_fill_in["FULL_NAME"].replace(" ", "_").lower()
         template.replace_pic("replace_me", f"mugshots/{pic_name}.png")
+        return True
     except:
-        full_name = to_fill_in["FULL_NAME"]
-        print(f"No mugshot found for {full_name}.")
+        try:
+            pic_name = to_fill_in["FULL_NAME"].replace(" ", "_").lower()
+            template.replace_pic("replace_me", f"mugshots/{pic_name}.jpeg")
+            return True
+        except:
+            try:
+                pic_name = to_fill_in["FULL_NAME"].replace(" ", "_").lower()
+                template.replace_pic("replace_me", f"mugshots/{pic_name}.jpg")
+                return True
+            except:
+                full_name = to_fill_in["FULL_NAME"]
+                print(f"No mugshot found for {full_name}.")
+        return False
     finally:
         template.render(to_fill_in)
         filename = str(to_fill_in["FULL_NAME"]).replace(" ", "_") + "_wanted.docx"
         filled_path = os.path.join(temppath, filename)
         template.save(filled_path)
         print("Done with %s" % str(to_fill_in["FULL_NAME"]))
+
+
 def main():
     while True:
         division = input("What's your division? (C/S/V/W) ").upper()
@@ -159,6 +177,7 @@ def main():
     to_fill_in["WEAPONS"] = weapons
     to_fill_in["DIVISION_CAPS"] = to_fill_in["DIVISION"].upper()
     save_file()
+
 
 if __name__ == "__main__":
     main()
